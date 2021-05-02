@@ -44,3 +44,82 @@ plt.show()
 
 # Prediction
 
+
+# SARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+# contrived dataset
+# fit model
+
+model = SARIMAX(gold_prices.Price, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+model_fit = model.fit(disp=False)
+yhat = model_fit.predict(start = 1, end = len(gold_prices))
+
+len(gold_prices.Price)
+len(yhat)
+plt.plot(gold_prices.index,gold_prices.Price,label = 'y')
+plt.plot(gold_prices.index,yhat, label = 'y_hat')
+plt.legend()
+plt.show()
+
+loss = abs(yhat-gold_prices.Price)
+anomaly_by_sarimax = loss[1:-1] > np.repeat(np.quantile(loss[1:-1],.9),len(loss)-2)
+sum(anomaly_by_sarimax)
+anomaly_by_sarimax.reset_index(drop=True,inplace=True)
+anomaly_by_sarimax = [False] + list(anomaly_by_sarimax)
+len(anomaly_by_sarimax)
+
+
+gold_prices['anomaly_by_sarimax'] = anomaly_by_sarimax
+colors =  list(gold_prices['anomaly_by_iqr'].replace({False:'b',True:'r'}))
+plt.scatter(gold_prices.index,gold_prices.Price, c = colors)
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+preds = []
+loss = list(np.repeat(0.0,12))
+for i in range(12,len(gold_prices)):
+
+    model = SARIMAX(gold_prices.Price[:i], order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+    model_fit = model.fit(disp=False)
+    # make prediction
+    yhat = model_fit.predict(i, i)
+    loss.append(abs(gold_prices.Price[i]-yhat))
+    preds.append(yhat)
+
+
+
+preds = list(gold_prices.Price[:12]) + preds
+len(preds)
+
+plt.plot(gold_prices.index,gold_prices.Price,label = 'y')
+plt.plot(gold_prices.index,preds, label = 'y_hat')
+plt.legend()
+plt.show()
+
+
+plt.hist([loss[i] for i in range(len(loss))]) ###
+
+mean_loss = np.mean(loss)
+anomaly = []
+for i in range(len(loss)):
+    if loss[i] >  mean_loss * 3:
+        anomaly.append(True)
+    else:
+        anomaly.append(False)
+
+
+colors =  list(pd.Series(anomaly).replace({False:'b',True:'r'}))
+plt.scatter(gold_prices.index,gold_prices.Price, c = colors)
+plt.show()
+
+
+loss[12]

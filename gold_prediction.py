@@ -75,51 +75,5 @@ plt.scatter(gold_prices.index,gold_prices.Price, c = colors)
 plt.show()
 
 
+gold_prices.describe(include='all')
 
-
-
-
-
-
-
-
-
-preds = []
-loss = list(np.repeat(0.0,12))
-for i in range(12,len(gold_prices)):
-
-    model = SARIMAX(gold_prices.Price[:i], order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
-    model_fit = model.fit(disp=False)
-    # make prediction
-    yhat = model_fit.predict(i, i)
-    loss.append(abs(gold_prices.Price[i]-yhat))
-    preds.append(yhat)
-
-
-
-preds = list(gold_prices.Price[:12]) + preds
-len(preds)
-
-plt.plot(gold_prices.index,gold_prices.Price,label = 'y')
-plt.plot(gold_prices.index,preds, label = 'y_hat')
-plt.legend()
-plt.show()
-
-
-plt.hist([loss[i] for i in range(len(loss))]) ###
-
-mean_loss = np.mean(loss)
-anomaly = []
-for i in range(len(loss)):
-    if loss[i] >  mean_loss * 3:
-        anomaly.append(True)
-    else:
-        anomaly.append(False)
-
-
-colors =  list(pd.Series(anomaly).replace({False:'b',True:'r'}))
-plt.scatter(gold_prices.index,gold_prices.Price, c = colors)
-plt.show()
-
-
-loss[12]
